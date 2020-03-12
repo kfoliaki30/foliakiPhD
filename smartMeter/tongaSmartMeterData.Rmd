@@ -1,0 +1,436 @@
+---
+title: 'Exploring Tongan Smart Meter Data'
+subtitle: 'Code and notes'
+author: "Ben Anderson (ben.anderson@otago.ac.nz), [Centre for Sustainability](https://www.otago.ac.nz/centre-sustainability/), University of Otago"
+date: 'Last run at: `r Sys.time()`'
+output:
+  bookdown::html_document2:
+    code_folding: hide
+    fig_caption: yes
+    number_sections: yes
+    self_contained: no
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  bookdown::pdf_document2:
+    fig_caption: yes
+    keep_tex: yes
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+  bookdown::word_document2:
+    fig_caption: yes
+    toc: yes
+    toc_depth: 2
+always_allow_html: yes
+bibliography: '`r path.expand("~/bibliography.bib")`'
+---
+
+```{r setup, include=FALSE}
+# Knitr setup ----
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE) # for final tidy run
+knitr::opts_chunk$set(message = FALSE) # for final tidy run
+
+# Set start time ----
+startTime <- proc.time()
+
+# Libraries ----
+
+library(data.table) # cos we like data.table (you may not in which case dplyr is fine :-)
+library(lubridate) # for data & time manip
+library(hms) # for hh:mm:ss if we need it
+library(ggplot2) # fancy plots
+library(kableExtra) # for extra kable
+library(skimr) # for skim (data description)
+library(XML)
+
+# Parameters ----
+#dPath <- "smb://storage.hcs-p01.otago.ac.nz/hum-csafe/Research Projects/FoliakiPhD/smartMeterData/v1" doesn't work (why not?)
+dPath <- "/Volumes/hum-csafe/Research Projects/FoliakiPhD/smartMeterData/v1" # edit for your set up
+```
+
+
+# Intro
+
+We have some Tongan smart meter data provided as part of [Kakau Foliaki](https://www.otago.ac.nz/centre-sustainability/staff/otago678543.html)'s PhD. This code loads & tests it.
+
+# Initial dataset - file: CRF_2020_1_28_4296268_1 - Copy.7z
+
+Sent to KF. No meta-data. Sent as xml. Converted (possibly with errors) to .csv.
+
+In theory this should be half-hourly electricity consumption (Wh or kWh) data for a large(ish) number of Tongan households. It even be all Tongan households with smart meters. But who knows...
+
+What have we got?
+
+```{r setData_f1}
+f1_xml <- path.expand(paste0(dPath, "/CRF_2020_1_28_4296268_1 - Copy.xml"))
+f1_csv <- path.expand(paste0(dPath, "/Smartmeter.csv.gz"))
+```
+
+First try loading the (huge) xml file (`r f1_xml`)
+
+> Skip this - take ages & fails
+
+```{r load_f1_xml}
+#try(f1_df <- XML::xmlToDataFrame(f1_xml)) # try as it breaks if there's an error
+
+```
+
+Helpful.
+
+Now try loading the .csv file (`r f1_csv`) and test what we get before any processing.
+
+```{r load_f1_csv}
+f1_dt_orig <- data.table::fread(f1_csv, check.names = TRUE)
+
+# names of variables
+names(f1_dt_orig)
+
+h <- head(f1_dt_orig)
+kableExtra::kable(h, caption = "First few rows")
+```
+
+```{r skim_f1_dt_orig}
+sk <- skimr::skim(f1_dt_orig)
+
+print(sk)
+```
+
+So what does all that mean? Let's test some of the variables.
+
+```{r copy_f1_csv}
+f1_dt <- data.table::copy(f1_dt_orig) # so we can revert if needed
+```
+
+## StartDate 
+
+Looks like a dateTime, does it walk like a dateTime? Looks like it's in `d/m/y H:M` form.
+
+```{r process_f1_csv_StartDate}
+f1_dt[, ba_StartDate := lubridate::dmy_hm(StartDate)]
+
+# convert & test
+
+head(f1_dt[, .(StartDate, ba_StartDate)])
+
+skimr::skim(f1_dt[, .(StartDate, ba_StartDate)])
+```
+
+
+>So startDate is 2018-11-30 11:00:00 and is constant. Presumably this is the start date for the data extract?
+
+## EndDate
+
+Logic (haha) would suggest this would be the end date for the data extract. Looks like it's in `d/m/y H:M` form.
+
+```{r process_f1_csv_EndDate}
+
+f1_dt[, ba_EndDate := lubridate::dmy_hm(EndDate)]
+dt <- f1_dt[, .(EndDate, ba_EndDate)]
+head(dt)
+skimr::skim(dt)
+```
+
+
+>And EndDate is also constant and is 2020-01-27 21:25:00 - but is not a round 'half hour'?
+
+## EndTime
+
+So what then is this? For a start it's in a different form - `d/m/y H:M:S`
+
+Of course it could also be m/d/y - can't tell from these rows.
+
+```{r process_f1_csv_EndTime}
+
+f1_dt[, ba_EndTime := lubridate::dmy_hms(EndTime)]
+dt <- f1_dt[, .(EndTime, ba_EndTime)]
+head(dt)
+skimr::skim(dt)
+```
+
+
+>So EndTime is also constant at 2019-05-12 05:00:00 but it is missing for a lot of rows.
+
+## NumberOfReadings_1
+
+For some reason this looks like a dateTime too - are the column headings mis-aligned?
+
+This is definitely in `m/d/y H:M:S` form...
+
+```{r process_f1_csv_NumberOfReadings_1}
+
+f1_dt[, ba_NumberOfReadings.1 := lubridate::mdy_hms(NumberOfReadings.1)] #mdy?
+dt <- f1_dt[, .(NumberOfReadings.1, ba_NumberOfReadings.1)]
+head(dt)
+skimr::skim(dt)
+```
+
+
+>NumberOfReadings.1 is constant at 2019-11-18 05:00:00 with a lot of missing. So what is this?
+
+We don't seem to have an obvious half hourly dateTime field...
+
+## X.id* variables
+
+Let's look at the IDs.
+
+```{r headAllIDs}
+h <- head(f1_dt[, .(X.id, X.id.1, X.id.2)], 10)
+kableExtra::kable(h, caption = "IDs - example rows") %>%
+  kable_styling()
+
+skimr::skim(f1_dt[, .(X.id, X.id.1, X.id.2)])
+```
+
+
+> So X.id and X.id1 could be true id variables. But X.id.2 seems to increase monotonically.
+
+Unique values:
+
+ * X.id: `r uniqueN(f1_dt$X.id)`
+ * X.id.1: `r uniqueN(f1_dt$X.id.1)`
+ * X.id.2: `r uniqueN(f1_dt$X.id.2)`
+
+### X.id
+
+```{r process_f1_csv_X_id}
+# distributions
+ggplot2::ggplot(f1_dt, aes(x = X.id)) +
+  geom_histogram()
+```
+
+So what do we infer from that???
+
+### X.id.1
+
+
+```{r process_f1_csv_X_id_1}
+# distributions
+ggplot2::ggplot(f1_dt, aes(x = X.id.1)) +
+  geom_histogram()
+```
+
+Well that looks more like a proper id - essentially random numbers of observations
+
+### X.id.2
+
+```{r process_f1_csv_X_id_2}
+# distributions
+ggplot2::ggplot(f1_dt, aes(x = X.id.2)) +
+  geom_histogram()
+```
+
+### What the ID?
+
+A summary table:
+
+```{r f1_id_summary}
+dt <- f1_dt[, .(nObs = .N,
+                min_X.id = min(X.id),
+                max_X.id = max(X.id),
+                min_X.id.2 = min(X.id.2),
+                max_X.id.2 = max(X.id.2)
+                ), keyby = .(X.id.1)]
+
+kableExtra::kable(head(dt), caption = "First few rows of summary table by X.id.1") %>%
+  kable_styling()
+```
+
+So:
+
+ * X.id has 599 unique values but they have weird counts
+ * X.id.1 has 896 and look less systematic - would we expect about this many smart meters in the sample?
+ * X.id.2 has a lot more but 0 and the highest value have identically fewer counts (and they seem to match the count profiles of the other ids)
+ * X.id.2 increases monotonically across the whole dataset, not within id.
+
+I suspect that:
+
+ * X.id.1 is actually the household id.
+ * X.id.2 is an incremental half-hour counter. We can test this by looking at the lag within each of the ids.
+
+```{r testLag_f1}
+f1_dt[, lagWithinX.id := X.id.2 - shift(X.id.2), keyby = .(X.id)]
+
+head(f1_dt[, .(X.id, X.id.2, lagWithinX.id)])
+
+summary(f1_dt[, .(X.id, X.id.2, lagWithinX.id)])
+
+ggplot2::ggplot(f1_dt, aes(x = lagWithinX.id)) +
+  geom_histogram()
+
+f1_dt[, lagWithinX.id.1 := X.id.2 - shift(X.id.2), keyby = .(X.id.1)]
+
+head(f1_dt[, .(X.id.1, X.id.2, lagWithinX.id.1)])
+
+summary(f1_dt[, .(X.id.1, X.id.2, lagWithinX.id.1)])
+
+ggplot2::ggplot(f1_dt, aes(x = lagWithinX.id.1)) +
+  geom_histogram()
+```
+
+>Yep. So we need a way to set the first dateTime within each id and then increase it by 30 minutes each row.
+
+## Setting true dateTime
+
+Based on our hunch...
+
+```{r f1_makeDateTime}
+f1_dt[, counter :=1]
+f1_dt[, cumsum := cumsum(counter), keyby = .(X.id.1)] # add up within X.id.1
+f1_dt[, dateTime := ba_StartDate] # constant
+f1_dt[, dateTime := dateTime + (cumsum * 30 * 60)] # add on the number of seconds since start
+
+f1_dt[, date := lubridate::date(dateTime)]
+f1_dt[, month := lubridate::month(dateTime,
+                                  label = TRUE, 
+                                  abbr = TRUE)
+      ]
+
+head(f1_dt[!is.na(X.id.1), .(X.id.1, X.id.2, ba_EndDate, ba_EndTime, 
+                             ba_StartDate, dateTime)])
+summary(f1_dt[!is.na(X.id.1), .(X.id.1, X.id.2, ba_EndDate, ba_EndTime,
+                                ba_StartDate, dateTime)])
+skim(f1_dt[, .(X.id.1, X.id.2,ba_EndDate, ba_EndTime, ba_StartDate, dateTime)])
+```
+
+> Looks OK: dateTime implies we have `r uniqueN(f1_dt$dateTime)` half hours represented which implies we only have 2 months of data.
+
+```{r f1_checkMonths}
+f1_dt[, .(nObs = .N), keyby = .(month,
+                                year = lubridate::year(dateTime))][order(year)]
+```
+
+
+> Looks like it _but_ this depends if we've coded dateTime correctly.
+
+Let's see how many households (IDs) and observations we have over time.
+
+```{r plot_f1_NumberOfIXDsByDate, fig.cap="Number of unique X.id by date"}
+plotDT <- f1_dt[, .(nX.id = uniqueN(X.id)), keyby = .(date)]
+ggplot2::ggplot(plotDT, aes(y = nX.id, x = date)) +
+  geom_point()
+```
+
+```{r plotf1NumberOfX1IDsByDate, fig.cap="Number of unique X.id.1 by date"}
+plotDT <- f1_dt[, .(nX.id.1 = uniqueN(X.id.1)), keyby = .(date)]
+ggplot2::ggplot(plotDT, aes(y = nX.id.1, x = date)) +
+  geom_point()
+```
+
+```{r NumberOfObsByDateTime, fig.cap="Number of obs by date"}
+plotDT <- f1_dt[, .(nObs = .N), keyby = .(date)]
+ggplot2::ggplot(plotDT, aes(y = nObs, x = date)) +
+  geom_point()
+```
+
+Yeah. So this does suggest that X.id.2 is a household ID as it follows the pattern of the number of observations (\@ref(fig:plotf1NumberOfX1IDsByDate)).
+
+## NumberOfReadings
+What is this for?
+
+```{r plot_f1_NumberOfReadings}
+head(f1_dt$NumberOfReadings)
+ggplot2::ggplot(f1_dt[,.(NumberOfReadings)], aes(x = NumberOfReadings)) +
+  geom_histogram()
+
+```
+
+OK, so why do we have some rows with lots of readings and some with far fewer? Is this just meta-data for each id - does it tell us how many readings we have for each ID?
+
+## Value
+
+Value should (ideally) be consumption per half hour.
+
+```{r plotf1value, fig.cap="Distribution of Value"}
+skim(f1_dt$Value)
+
+ggplot2::ggplot(f1_dt[,.(Value, NumberOfReadings)], aes(x = NumberOfReadings , y = Value)) +
+  geom_point()
+
+ggplot2::ggplot(f1_dt[,.(Value, NumberOfReadings)], aes(x = Value)) +
+  geom_histogram()
+```
+
+Well \@ref(fig:plotf1value) looks a bit odd. Why is there a sort of threshold at 250? We obviously have very few Values over 250...
+
+Try plotting mean of Value by dateTime across all households (remember number of X.id.1s varies across time)
+
+```{r plot_f1_valueByDate, fig.cap = "Box plot of Value by date"}
+
+p <- ggplot2::ggplot(f1_dt, aes(x = date , y = Value, group = date)) +
+  geom_boxplot()
+
+p
+
+```
+
+Christmas day looks interesting. But most of the values are below 250 on every other day.
+
+```{r plot_f1_valueMeanByDate, fig.cap = "Mean Value by date"}
+plotDT <- f1_dt[, .(meanValue = mean(Value)), keyby = .(dateTime)]
+  ggplot2::ggplot(plotDT, aes(x = dateTime , y = meanValue)) +
+  geom_point()
+```
+
+```{r plot_f1_valueByTime, fig.cap = "Value by time of day"}
+f1_dt[, hms := hms::as_hms(dateTime)]
+f1_dt[, month := lubridate::month(dateTime, label = TRUE, abbr = TRUE)]
+
+ggplot2::ggplot(f1_dt[!is.na(month)], aes(x = hms , y = Value, group = hms)) +
+  geom_boxplot() +
+  facet_grid(. ~ month)
+```
+
+```{r plotf1meanValueByTime, fig.cap = "Mean Value by time of day"}
+plotDT <- f1_dt[!is.na(month), .(meanValue = mean(Value)), keyby = .(month, hms)]
+  
+ggplot2::ggplot(plotDT, aes(x = hms , y = meanValue)) +
+  geom_point() +
+  facet_grid(. ~ month)
+```
+
+What is this? Is this even the right shape?? \@ref(fig:plotf1meanValueByTime) Could be... but the values are weird.
+
+> It can't be voltage can it (with outliers)?
+
+## Initial dataset summary
+
+We really don't know what most of these data columns are!
+
+# Second dataset
+
+Let's hope this is more heplful!!
+
+# Runtime
+
+```{r check runtime, include=FALSE}
+t <- proc.time() - startTime
+elapsed <- t[[3]]
+```
+
+Analysis completed in `r round(elapsed,2)` seconds ( `r round(elapsed/60,2)` minutes) using [knitr](https://cran.r-project.org/package=knitr) in [RStudio](http://www.rstudio.com) with `r R.version.string` running on `r R.version$platform`.
+
+# R environment
+
+## R packages used
+
+ * base R [@baseR]
+ * bookdown [@bookdown]
+ * data.table [@data.table]
+ * ggplot2 [@ggplot2]
+ * kableExtra [@kableExtra]
+ * knitr [@knitr]
+ * lubridate [@lubridate]
+ * rmarkdown [@rmarkdown]
+ * skimr [@skimr]
+ * XML [@XML]
+
+## Session info
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```
+
+# References
+

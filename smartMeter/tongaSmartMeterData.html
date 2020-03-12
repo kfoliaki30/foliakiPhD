@@ -1,0 +1,3052 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Ben Anderson (ben.anderson@otago.ac.nz), Centre for Sustainability, University of Otago" />
+
+
+<title>Exploring Tongan Smart Meter Data</title>
+
+<script src="tongaSmartMeterData_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="tongaSmartMeterData_files/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="tongaSmartMeterData_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="tongaSmartMeterData_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="tongaSmartMeterData_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="tongaSmartMeterData_files/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="tongaSmartMeterData_files/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="tongaSmartMeterData_files/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="tongaSmartMeterData_files/navigation-1.1/tabsets.js"></script>
+<script src="tongaSmartMeterData_files/navigation-1.1/codefolding.js"></script>
+<link href="tongaSmartMeterData_files/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="tongaSmartMeterData_files/highlightjs-9.12.0/highlight.js"></script>
+<script src="tongaSmartMeterData_files/kePrint-0.0.1/kePrint.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Exploring Tongan Smart Meter Data</h1>
+<h3 class="subtitle">Code and notes</h3>
+<h4 class="author">Ben Anderson (<a href="mailto:ben.anderson@otago.ac.nz" class="email">ben.anderson@otago.ac.nz</a>), <a href="https://www.otago.ac.nz/centre-sustainability/">Centre for Sustainability</a>, University of Otago</h4>
+<h4 class="date">Last run at: 2020-03-12 16:09:36</h4>
+
+</div>
+
+
+<div id="intro" class="section level1">
+<h1><span class="header-section-number">1</span> Intro</h1>
+<p>We have some Tongan smart meter data provided as part of <a href="https://www.otago.ac.nz/centre-sustainability/staff/otago678543.html">Kakau Foliaki</a>’s PhD. This code loads &amp; tests it.</p>
+</div>
+<div id="initial-dataset---file-crf_2020_1_28_4296268_1---copy.7z" class="section level1">
+<h1><span class="header-section-number">2</span> Initial dataset - file: CRF_2020_1_28_4296268_1 - Copy.7z</h1>
+<p>Sent to KF. No meta-data. Sent as xml. Converted (possibly with errors) to .csv.</p>
+<p>In theory this should be half-hourly electricity consumption (Wh or kWh) data for a large(ish) number of Tongan households. It even be all Tongan households with smart meters. But who knows…</p>
+<p>What have we got?</p>
+<pre class="r"><code>f1_xml &lt;- path.expand(paste0(dPath, &quot;/CRF_2020_1_28_4296268_1 - Copy.xml&quot;))
+f1_csv &lt;- path.expand(paste0(dPath, &quot;/Smartmeter.csv.gz&quot;))</code></pre>
+<p>First try loading the (huge) xml file (/Volumes/hum-csafe/Research Projects/FoliakiPhD/smartMeterData/v1/CRF_2020_1_28_4296268_1 - Copy.xml)</p>
+<blockquote>
+<p>Skip this - take ages &amp; fails</p>
+</blockquote>
+<pre class="r"><code>#try(f1_df &lt;- XML::xmlToDataFrame(f1_xml)) # try as it breaks if there&#39;s an error</code></pre>
+<p>Helpful.</p>
+<p>Now try loading the .csv file (/Volumes/hum-csafe/Research Projects/FoliakiPhD/smartMeterData/v1/Smartmeter.csv.gz) and test what we get before any processing.</p>
+<pre class="r"><code>f1_dt_orig &lt;- data.table::fread(f1_csv, check.names = TRUE)
+
+# names of variables
+names(f1_dt_orig)</code></pre>
+<pre><code>##  [1] &quot;EndDate&quot;                                                                                                                        
+##  [2] &quot;IntervalLength&quot;                                                                                                                 
+##  [3] &quot;StartDate&quot;                                                                                                                      
+##  [4] &quot;X.id&quot;                                                                                                                           
+##  [5] &quot;EndPointChannelID&quot;                                                                                                              
+##  [6] &quot;NumberOfReadings&quot;                                                                                                               
+##  [7] &quot;X.id.1&quot;                                                                                                                         
+##  [8] &quot;EndTime&quot;                                                                                                                        
+##  [9] &quot;NumberOfReadings.1&quot;                                                                                                             
+## [10] &quot;Value&quot;                                                                                                                          
+## [11] &quot;X.id.2&quot;                                                                                                                         
+## [12] &quot;X.Channels.Channel.ContiguousIntervalSets.ContiguousIntervalSet.Readings.Reading.ReadingStatus.UnencodedStatus.StatusCodes.Code&quot;
+## [13] &quot;X.Channels.Channel.OptionalChannelDatas.OptionalChannelData..Value&quot;                                                             
+## [14] &quot;X.Channels.Channel.OptionalChannelDatas.OptionalChannelData..Value..agg&quot;                                                        
+## [15] &quot;X.Header.CorrelationID..Id&quot;                                                                                                     
+## [16] &quot;X.Header.CorrelationID..Id..agg&quot;</code></pre>
+<pre class="r"><code>h &lt;- head(f1_dt_orig)
+kableExtra::kable(h, caption = &quot;First few rows&quot;)</code></pre>
+<table>
+<caption>
+(#tab:load_f1_csv)First few rows
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+EndDate
+</th>
+<th style="text-align:right;">
+IntervalLength
+</th>
+<th style="text-align:left;">
+StartDate
+</th>
+<th style="text-align:right;">
+X.id
+</th>
+<th style="text-align:left;">
+EndPointChannelID
+</th>
+<th style="text-align:right;">
+NumberOfReadings
+</th>
+<th style="text-align:right;">
+X.id.1
+</th>
+<th style="text-align:left;">
+EndTime
+</th>
+<th style="text-align:left;">
+NumberOfReadings.1
+</th>
+<th style="text-align:right;">
+Value
+</th>
+<th style="text-align:right;">
+X.id.2
+</th>
+<th style="text-align:left;">
+X.Channels.Channel.ContiguousIntervalSets.ContiguousIntervalSet.Readings.Reading.ReadingStatus.UnencodedStatus.StatusCodes.Code
+</th>
+<th style="text-align:right;">
+X.Channels.Channel.OptionalChannelDatas.OptionalChannelData..Value
+</th>
+<th style="text-align:right;">
+X.Channels.Channel.OptionalChannelDatas.OptionalChannelData..Value..agg
+</th>
+<th style="text-align:right;">
+X.Header.CorrelationID..Id
+</th>
+<th style="text-align:right;">
+X.Header.CorrelationID..Id..agg
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+27/01/20 21:25
+</td>
+<td style="text-align:right;">
+30
+</td>
+<td style="text-align:left;">
+30/11/18 11:00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+318314893:1
+</td>
+<td style="text-align:right;">
+816
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+12/05/2019 05:00:00
+</td>
+<td style="text-align:left;">
+11/18/2019 05:00:00
+</td>
+<td style="text-align:right;">
+235
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:right;">
+4296268
+</td>
+<td style="text-align:right;">
+4296268
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+27/01/20 21:25
+</td>
+<td style="text-align:right;">
+30
+</td>
+<td style="text-align:left;">
+30/11/18 11:00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+318314893:1
+</td>
+<td style="text-align:right;">
+816
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+12/05/2019 05:00:00
+</td>
+<td style="text-align:left;">
+11/18/2019 05:00:00
+</td>
+<td style="text-align:right;">
+235
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+4296268
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+27/01/20 21:25
+</td>
+<td style="text-align:right;">
+30
+</td>
+<td style="text-align:left;">
+30/11/18 11:00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+318314893:1
+</td>
+<td style="text-align:right;">
+816
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+12/05/2019 05:00:00
+</td>
+<td style="text-align:left;">
+11/18/2019 05:00:00
+</td>
+<td style="text-align:right;">
+233
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+4296268
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+27/01/20 21:25
+</td>
+<td style="text-align:right;">
+30
+</td>
+<td style="text-align:left;">
+30/11/18 11:00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+318314893:1
+</td>
+<td style="text-align:right;">
+816
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+12/05/2019 05:00:00
+</td>
+<td style="text-align:left;">
+11/18/2019 05:00:00
+</td>
+<td style="text-align:right;">
+231
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+4296268
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+27/01/20 21:25
+</td>
+<td style="text-align:right;">
+30
+</td>
+<td style="text-align:left;">
+30/11/18 11:00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+318314893:1
+</td>
+<td style="text-align:right;">
+816
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+12/05/2019 05:00:00
+</td>
+<td style="text-align:left;">
+11/18/2019 05:00:00
+</td>
+<td style="text-align:right;">
+234
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+4296268
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+27/01/20 21:25
+</td>
+<td style="text-align:right;">
+30
+</td>
+<td style="text-align:left;">
+30/11/18 11:00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+318314893:1
+</td>
+<td style="text-align:right;">
+816
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+12/05/2019 05:00:00
+</td>
+<td style="text-align:left;">
+11/18/2019 05:00:00
+</td>
+<td style="text-align:right;">
+234
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+4296268
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>sk &lt;- skimr::skim(f1_dt_orig)
+
+print(sk)</code></pre>
+<pre><code>## ── Data Summary ────────────────────────
+##                            Values    
+## Name                       f1_dt_orig
+## Number of rows             1048574   
+## Number of columns          16        
+## _______________________              
+## Column type frequency:               
+##   character                6         
+##   numeric                  10        
+## ________________________             
+## Group variables            None      
+## 
+## ── Variable type: character ────────────────────────────────────────────────────
+##   skim_variable                                                                 
+## 1 EndDate                                                                       
+## 2 StartDate                                                                     
+## 3 EndPointChannelID                                                             
+## 4 EndTime                                                                       
+## 5 NumberOfReadings.1                                                            
+## 6 X.Channels.Channel.ContiguousIntervalSets.ContiguousIntervalSet.Readings.Read…
+##   n_missing complete_rate   min   max   empty n_unique whitespace
+## 1         0             1     0    14   11155        2          0
+## 2         0             1     0    14   11155        2          0
+## 3         0             1    11    11       0      300          0
+## 4         0             1     0    19 1047722        2          0
+## 5         0             1     0    19 1047722        2          0
+## 6         0             1     0    19  976345        7          0
+## 
+## ── Variable type: numeric ──────────────────────────────────────────────────────
+##    skim_variable                                                          
+##  1 IntervalLength                                                         
+##  2 X.id                                                                   
+##  3 NumberOfReadings                                                       
+##  4 X.id.1                                                                 
+##  5 Value                                                                  
+##  6 X.id.2                                                                 
+##  7 X.Channels.Channel.OptionalChannelDatas.OptionalChannelData..Value     
+##  8 X.Channels.Channel.OptionalChannelDatas.OptionalChannelData..Value..agg
+##  9 X.Header.CorrelationID..Id                                             
+## 10 X.Header.CorrelationID..Id..agg                                        
+##    n_missing complete_rate     mean       sd      p0      p25     p50      p75
+##  1     11155   0.989            30       0        30      30       30      30 
+##  2         0   1               300.    173.        1     149      299     449 
+##  3     11155   0.989          1524.    679.       12     816     1896    1896 
+##  4     11155   0.989           447.    259.        1     221      460     672 
+##  5     11155   0.989           232.     32.1       0     234      237     240 
+##  6     11155   0.989        503715. 290824.        1  251860.  503705  755582.
+##  7         0   1                14       0        14      14       14      14 
+##  8   1047975   0.000571         14       0        14      14       14      14 
+##  9         0   1           4296268       0   4296268 4296268  4296268 4296268 
+## 10   1048573   0.000000954 4296268      NA   4296268 4296268  4296268 4296268 
+##       p100 hist 
+##  1      30 ▁▁▇▁▁
+##  2     599 ▇▇▇▇▇
+##  3    2724 ▁▇▁▇▂
+##  4     895 ▇▆▇▆▇
+##  5     917 ▁▇▁▁▁
+##  6 1007419 ▇▇▇▇▇
+##  7      14 ▁▁▇▁▁
+##  8      14 ▁▁▇▁▁
+##  9 4296268 ▁▁▇▁▁
+## 10 4296268 ▁▁▇▁▁</code></pre>
+<p>So what does all that mean? Let’s test some of the variables.</p>
+<pre class="r"><code>f1_dt &lt;- data.table::copy(f1_dt_orig) # so we can revert if needed</code></pre>
+<div id="startdate" class="section level2">
+<h2><span class="header-section-number">2.1</span> StartDate</h2>
+<p>Looks like a dateTime, does it walk like a dateTime? Looks like it’s in <code>d/m/y H:M</code> form.</p>
+<pre class="r"><code>f1_dt[, ba_StartDate := lubridate::dmy_hm(StartDate)]
+
+# convert &amp; test
+
+head(f1_dt[, .(StartDate, ba_StartDate)])</code></pre>
+<pre><code>##         StartDate        ba_StartDate
+## 1: 30/11/18 11:00 2018-11-30 11:00:00
+## 2: 30/11/18 11:00 2018-11-30 11:00:00
+## 3: 30/11/18 11:00 2018-11-30 11:00:00
+## 4: 30/11/18 11:00 2018-11-30 11:00:00
+## 5: 30/11/18 11:00 2018-11-30 11:00:00
+## 6: 30/11/18 11:00 2018-11-30 11:00:00</code></pre>
+<pre class="r"><code>skimr::skim(f1_dt[, .(StartDate, ba_StartDate)])</code></pre>
+<table style='width: auto;'
+        class='table table-condensed'>
+<caption>
+(#tab:process_f1_csv_StartDate)Data summary
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Name
+</td>
+<td style="text-align:left;">
+f1_dt[, .(StartDate, ba_S…
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of rows
+</td>
+<td style="text-align:left;">
+1048574
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of columns
+</td>
+<td style="text-align:left;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+_______________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Column type frequency:
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+character
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+POSIXct
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+________________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Group variables
+</td>
+<td style="text-align:left;">
+None
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: character</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+skim_variable
+</th>
+<th style="text-align:right;">
+n_missing
+</th>
+<th style="text-align:right;">
+complete_rate
+</th>
+<th style="text-align:right;">
+min
+</th>
+<th style="text-align:right;">
+max
+</th>
+<th style="text-align:right;">
+empty
+</th>
+<th style="text-align:right;">
+n_unique
+</th>
+<th style="text-align:right;">
+whitespace
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+StartDate
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:right;">
+11155
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: POSIXct</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+skim_variable
+</th>
+<th style="text-align:right;">
+n_missing
+</th>
+<th style="text-align:right;">
+complete_rate
+</th>
+<th style="text-align:left;">
+min
+</th>
+<th style="text-align:left;">
+max
+</th>
+<th style="text-align:left;">
+median
+</th>
+<th style="text-align:right;">
+n_unique
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+ba_StartDate
+</td>
+<td style="text-align:right;">
+11155
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:left;">
+2018-11-30 11:00:00
+</td>
+<td style="text-align:left;">
+2018-11-30 11:00:00
+</td>
+<td style="text-align:left;">
+2018-11-30 11:00:00
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>So startDate is 2018-11-30 11:00:00 and is constant. Presumably this is the start date for the data extract?</p>
+</blockquote>
+</div>
+<div id="enddate" class="section level2">
+<h2><span class="header-section-number">2.2</span> EndDate</h2>
+<p>Logic (haha) would suggest this would be the end date for the data extract. Looks like it’s in <code>d/m/y H:M</code> form.</p>
+<pre class="r"><code>f1_dt[, ba_EndDate := lubridate::dmy_hm(EndDate)]
+dt &lt;- f1_dt[, .(EndDate, ba_EndDate)]
+head(dt)</code></pre>
+<pre><code>##           EndDate          ba_EndDate
+## 1: 27/01/20 21:25 2020-01-27 21:25:00
+## 2: 27/01/20 21:25 2020-01-27 21:25:00
+## 3: 27/01/20 21:25 2020-01-27 21:25:00
+## 4: 27/01/20 21:25 2020-01-27 21:25:00
+## 5: 27/01/20 21:25 2020-01-27 21:25:00
+## 6: 27/01/20 21:25 2020-01-27 21:25:00</code></pre>
+<pre class="r"><code>skimr::skim(dt)</code></pre>
+<table style='width: auto;'
+        class='table table-condensed'>
+<caption>
+(#tab:process_f1_csv_EndDate)Data summary
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Name
+</td>
+<td style="text-align:left;">
+dt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of rows
+</td>
+<td style="text-align:left;">
+1048574
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of columns
+</td>
+<td style="text-align:left;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+_______________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Column type frequency:
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+character
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+POSIXct
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+________________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Group variables
+</td>
+<td style="text-align:left;">
+None
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: character</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+skim_variable
+</th>
+<th style="text-align:right;">
+n_missing
+</th>
+<th style="text-align:right;">
+complete_rate
+</th>
+<th style="text-align:right;">
+min
+</th>
+<th style="text-align:right;">
+max
+</th>
+<th style="text-align:right;">
+empty
+</th>
+<th style="text-align:right;">
+n_unique
+</th>
+<th style="text-align:right;">
+whitespace
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+EndDate
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:right;">
+11155
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: POSIXct</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+skim_variable
+</th>
+<th style="text-align:right;">
+n_missing
+</th>
+<th style="text-align:right;">
+complete_rate
+</th>
+<th style="text-align:left;">
+min
+</th>
+<th style="text-align:left;">
+max
+</th>
+<th style="text-align:left;">
+median
+</th>
+<th style="text-align:right;">
+n_unique
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+ba_EndDate
+</td>
+<td style="text-align:right;">
+11155
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:left;">
+2020-01-27 21:25:00
+</td>
+<td style="text-align:left;">
+2020-01-27 21:25:00
+</td>
+<td style="text-align:left;">
+2020-01-27 21:25:00
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>And EndDate is also constant and is 2020-01-27 21:25:00 - but is not a round ‘half hour’?</p>
+</blockquote>
+</div>
+<div id="endtime" class="section level2">
+<h2><span class="header-section-number">2.3</span> EndTime</h2>
+<p>So what then is this? For a start it’s in a different form - <code>d/m/y H:M:S</code></p>
+<p>Of course it could also be m/d/y - can’t tell from these rows.</p>
+<pre class="r"><code>f1_dt[, ba_EndTime := lubridate::dmy_hms(EndTime)]
+dt &lt;- f1_dt[, .(EndTime, ba_EndTime)]
+head(dt)</code></pre>
+<pre><code>##                EndTime          ba_EndTime
+## 1: 12/05/2019 05:00:00 2019-05-12 05:00:00
+## 2: 12/05/2019 05:00:00 2019-05-12 05:00:00
+## 3: 12/05/2019 05:00:00 2019-05-12 05:00:00
+## 4: 12/05/2019 05:00:00 2019-05-12 05:00:00
+## 5: 12/05/2019 05:00:00 2019-05-12 05:00:00
+## 6: 12/05/2019 05:00:00 2019-05-12 05:00:00</code></pre>
+<pre class="r"><code>skimr::skim(dt)</code></pre>
+<table style='width: auto;'
+        class='table table-condensed'>
+<caption>
+(#tab:process_f1_csv_EndTime)Data summary
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Name
+</td>
+<td style="text-align:left;">
+dt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of rows
+</td>
+<td style="text-align:left;">
+1048574
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of columns
+</td>
+<td style="text-align:left;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+_______________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Column type frequency:
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+character
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+POSIXct
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+________________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Group variables
+</td>
+<td style="text-align:left;">
+None
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: character</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+skim_variable
+</th>
+<th style="text-align:right;">
+n_missing
+</th>
+<th style="text-align:right;">
+complete_rate
+</th>
+<th style="text-align:right;">
+min
+</th>
+<th style="text-align:right;">
+max
+</th>
+<th style="text-align:right;">
+empty
+</th>
+<th style="text-align:right;">
+n_unique
+</th>
+<th style="text-align:right;">
+whitespace
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+EndTime
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+1047722
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: POSIXct</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+skim_variable
+</th>
+<th style="text-align:right;">
+n_missing
+</th>
+<th style="text-align:right;">
+complete_rate
+</th>
+<th style="text-align:left;">
+min
+</th>
+<th style="text-align:left;">
+max
+</th>
+<th style="text-align:left;">
+median
+</th>
+<th style="text-align:right;">
+n_unique
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+ba_EndTime
+</td>
+<td style="text-align:right;">
+1047722
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+2019-05-12 05:00:00
+</td>
+<td style="text-align:left;">
+2019-05-12 05:00:00
+</td>
+<td style="text-align:left;">
+2019-05-12 05:00:00
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>So EndTime is also constant at 2019-05-12 05:00:00 but it is missing for a lot of rows.</p>
+</blockquote>
+</div>
+<div id="numberofreadings_1" class="section level2">
+<h2><span class="header-section-number">2.4</span> NumberOfReadings_1</h2>
+<p>For some reason this looks like a dateTime too - are the column headings mis-aligned?</p>
+<p>This is definitely in <code>m/d/y H:M:S</code> form…</p>
+<pre class="r"><code>f1_dt[, ba_NumberOfReadings.1 := lubridate::mdy_hms(NumberOfReadings.1)] #mdy?
+dt &lt;- f1_dt[, .(NumberOfReadings.1, ba_NumberOfReadings.1)]
+head(dt)</code></pre>
+<pre><code>##     NumberOfReadings.1 ba_NumberOfReadings.1
+## 1: 11/18/2019 05:00:00   2019-11-18 05:00:00
+## 2: 11/18/2019 05:00:00   2019-11-18 05:00:00
+## 3: 11/18/2019 05:00:00   2019-11-18 05:00:00
+## 4: 11/18/2019 05:00:00   2019-11-18 05:00:00
+## 5: 11/18/2019 05:00:00   2019-11-18 05:00:00
+## 6: 11/18/2019 05:00:00   2019-11-18 05:00:00</code></pre>
+<pre class="r"><code>skimr::skim(dt)</code></pre>
+<table style='width: auto;'
+        class='table table-condensed'>
+<caption>
+(#tab:process_f1_csv_NumberOfReadings_1)Data summary
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Name
+</td>
+<td style="text-align:left;">
+dt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of rows
+</td>
+<td style="text-align:left;">
+1048574
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of columns
+</td>
+<td style="text-align:left;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+_______________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Column type frequency:
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+character
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+POSIXct
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+________________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Group variables
+</td>
+<td style="text-align:left;">
+None
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: character</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+skim_variable
+</th>
+<th style="text-align:right;">
+n_missing
+</th>
+<th style="text-align:right;">
+complete_rate
+</th>
+<th style="text-align:right;">
+min
+</th>
+<th style="text-align:right;">
+max
+</th>
+<th style="text-align:right;">
+empty
+</th>
+<th style="text-align:right;">
+n_unique
+</th>
+<th style="text-align:right;">
+whitespace
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+NumberOfReadings.1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+1047722
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: POSIXct</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+skim_variable
+</th>
+<th style="text-align:right;">
+n_missing
+</th>
+<th style="text-align:right;">
+complete_rate
+</th>
+<th style="text-align:left;">
+min
+</th>
+<th style="text-align:left;">
+max
+</th>
+<th style="text-align:left;">
+median
+</th>
+<th style="text-align:right;">
+n_unique
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+ba_NumberOfReadings.1
+</td>
+<td style="text-align:right;">
+1047722
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+2019-11-18 05:00:00
+</td>
+<td style="text-align:left;">
+2019-11-18 05:00:00
+</td>
+<td style="text-align:left;">
+2019-11-18 05:00:00
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>NumberOfReadings.1 is constant at 2019-11-18 05:00:00 with a lot of missing. So what is this?</p>
+</blockquote>
+<p>We don’t seem to have an obvious half hourly dateTime field…</p>
+</div>
+<div id="x.id-variables" class="section level2">
+<h2><span class="header-section-number">2.5</span> X.id* variables</h2>
+<p>Let’s look at the IDs.</p>
+<pre class="r"><code>h &lt;- head(f1_dt[, .(X.id, X.id.1, X.id.2)], 10)
+kableExtra::kable(h, caption = &quot;IDs - example rows&quot;) %&gt;%
+  kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:headAllIDs">Table 2.1: </span>IDs - example rows
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+X.id
+</th>
+<th style="text-align:right;">
+X.id.1
+</th>
+<th style="text-align:right;">
+X.id.2
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+6
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+7
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+7
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+8
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+9
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>skimr::skim(f1_dt[, .(X.id, X.id.1, X.id.2)])</code></pre>
+<table style='width: auto;'
+        class='table table-condensed'>
+<caption>
+<span id="tab:headAllIDs">Table 2.1: </span>Data summary
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Name
+</td>
+<td style="text-align:left;">
+f1_dt[, .(X.id, X.id.1, X…
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of rows
+</td>
+<td style="text-align:left;">
+1048574
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of columns
+</td>
+<td style="text-align:left;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+_______________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Column type frequency:
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+numeric
+</td>
+<td style="text-align:left;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+________________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Group variables
+</td>
+<td style="text-align:left;">
+None
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: numeric</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+skim_variable
+</th>
+<th style="text-align:right;">
+n_missing
+</th>
+<th style="text-align:right;">
+complete_rate
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+p0
+</th>
+<th style="text-align:right;">
+p25
+</th>
+<th style="text-align:right;">
+p50
+</th>
+<th style="text-align:right;">
+p75
+</th>
+<th style="text-align:right;">
+p100
+</th>
+<th style="text-align:left;">
+hist
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+X.id
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+299.83
+</td>
+<td style="text-align:right;">
+173.13
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+149.0
+</td>
+<td style="text-align:right;">
+299
+</td>
+<td style="text-align:right;">
+449.0
+</td>
+<td style="text-align:right;">
+599
+</td>
+<td style="text-align:left;">
+▇▇▇▇▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+X.id.1
+</td>
+<td style="text-align:right;">
+11155
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:right;">
+446.71
+</td>
+<td style="text-align:right;">
+259.02
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+221.0
+</td>
+<td style="text-align:right;">
+460
+</td>
+<td style="text-align:right;">
+672.0
+</td>
+<td style="text-align:right;">
+895
+</td>
+<td style="text-align:left;">
+▇▆▇▆▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+X.id.2
+</td>
+<td style="text-align:right;">
+11155
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:right;">
+503715.04
+</td>
+<td style="text-align:right;">
+290824.01
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+251860.5
+</td>
+<td style="text-align:right;">
+503705
+</td>
+<td style="text-align:right;">
+755582.5
+</td>
+<td style="text-align:right;">
+1007419
+</td>
+<td style="text-align:left;">
+▇▇▇▇▇
+</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>So X.id and X.id1 could be true id variables. But X.id.2 seems to increase monotonically.</p>
+</blockquote>
+<p>Unique values:</p>
+<ul>
+<li>X.id: 599</li>
+<li>X.id.1: 896</li>
+<li>X.id.2: 1007420</li>
+</ul>
+<div id="x.id" class="section level3">
+<h3><span class="header-section-number">2.5.1</span> X.id</h3>
+<pre class="r"><code># distributions
+ggplot2::ggplot(f1_dt, aes(x = X.id)) +
+  geom_histogram()</code></pre>
+<p><img src="tongaSmartMeterData_files/figure-html/process_f1_csv_X_id-1.png" width="672" /></p>
+<p>So what do we infer from that???</p>
+</div>
+<div id="x.id.1" class="section level3">
+<h3><span class="header-section-number">2.5.2</span> X.id.1</h3>
+<pre class="r"><code># distributions
+ggplot2::ggplot(f1_dt, aes(x = X.id.1)) +
+  geom_histogram()</code></pre>
+<p><img src="tongaSmartMeterData_files/figure-html/process_f1_csv_X_id_1-1.png" width="672" /></p>
+<p>Well that looks more like a proper id - essentially random numbers of observations</p>
+</div>
+<div id="x.id.2" class="section level3">
+<h3><span class="header-section-number">2.5.3</span> X.id.2</h3>
+<pre class="r"><code># distributions
+ggplot2::ggplot(f1_dt, aes(x = X.id.2)) +
+  geom_histogram()</code></pre>
+<p><img src="tongaSmartMeterData_files/figure-html/process_f1_csv_X_id_2-1.png" width="672" /></p>
+</div>
+<div id="what-the-id" class="section level3">
+<h3><span class="header-section-number">2.5.4</span> What the ID?</h3>
+<p>A summary table:</p>
+<pre class="r"><code>dt &lt;- f1_dt[, .(nObs = .N,
+                min_X.id = min(X.id),
+                max_X.id = max(X.id),
+                min_X.id.2 = min(X.id.2),
+                max_X.id.2 = max(X.id.2)
+                ), keyby = .(X.id.1)]
+
+kableExtra::kable(head(dt), caption = &quot;First few rows of summary table by X.id.1&quot;) %&gt;%
+  kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+(#tab:f1_id_summary)First few rows of summary table by X.id.1
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+X.id.1
+</th>
+<th style="text-align:right;">
+nObs
+</th>
+<th style="text-align:right;">
+min_X.id
+</th>
+<th style="text-align:right;">
+max_X.id
+</th>
+<th style="text-align:right;">
+min_X.id.2
+</th>
+<th style="text-align:right;">
+max_X.id.2
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+11155
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+598
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+852
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+816
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+1947
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+817
+</td>
+<td style="text-align:right;">
+2712
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+661
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+2713
+</td>
+<td style="text-align:right;">
+3360
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+853
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+3361
+</td>
+<td style="text-align:right;">
+4176
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+1944
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+4177
+</td>
+<td style="text-align:right;">
+6072
+</td>
+</tr>
+</tbody>
+</table>
+<p>So:</p>
+<ul>
+<li>X.id has 599 unique values but they have weird counts</li>
+<li>X.id.1 has 896 and look less systematic - would we expect about this many smart meters in the sample?</li>
+<li>X.id.2 has a lot more but 0 and the highest value have identically fewer counts (and they seem to match the count profiles of the other ids)</li>
+<li>X.id.2 increases monotonically across the whole dataset, not within id.</li>
+</ul>
+<p>I suspect that:</p>
+<ul>
+<li>X.id.1 is actually the household id.</li>
+<li>X.id.2 is an incremental half-hour counter. We can test this by looking at the lag within each of the ids.</li>
+</ul>
+<pre class="r"><code>f1_dt[, lagWithinX.id := X.id.2 - shift(X.id.2), keyby = .(X.id)]
+
+head(f1_dt[, .(X.id, X.id.2, lagWithinX.id)])</code></pre>
+<pre><code>##    X.id X.id.2 lagWithinX.id
+## 1:    1      1            NA
+## 2:    1      2             1
+## 3:    1      3             1
+## 4:    1      4             1
+## 5:    1      5             1
+## 6:    1      6             1</code></pre>
+<pre class="r"><code>summary(f1_dt[, .(X.id, X.id.2, lagWithinX.id)])</code></pre>
+<pre><code>##       X.id           X.id.2        lagWithinX.id  
+##  Min.   :  1.0   Min.   :      1   Min.   :0.000  
+##  1st Qu.:149.0   1st Qu.: 251860   1st Qu.:1.000  
+##  Median :299.0   Median : 503705   Median :1.000  
+##  Mean   :299.8   Mean   : 503715   Mean   :0.971  
+##  3rd Qu.:449.0   3rd Qu.: 755582   3rd Qu.:1.000  
+##  Max.   :599.0   Max.   :1007419   Max.   :1.000  
+##                  NA&#39;s   :11155     NA&#39;s   :11455</code></pre>
+<pre class="r"><code>ggplot2::ggplot(f1_dt, aes(x = lagWithinX.id)) +
+  geom_histogram()</code></pre>
+<p><img src="tongaSmartMeterData_files/figure-html/testLag_f1-1.png" width="672" /></p>
+<pre class="r"><code>f1_dt[, lagWithinX.id.1 := X.id.2 - shift(X.id.2), keyby = .(X.id.1)]
+
+head(f1_dt[, .(X.id.1, X.id.2, lagWithinX.id.1)])</code></pre>
+<pre><code>##    X.id.1 X.id.2 lagWithinX.id.1
+## 1:     NA     NA              NA
+## 2:     NA     NA              NA
+## 3:     NA     NA              NA
+## 4:     NA     NA              NA
+## 5:     NA     NA              NA
+## 6:     NA     NA              NA</code></pre>
+<pre class="r"><code>summary(f1_dt[, .(X.id.1, X.id.2, lagWithinX.id.1)])</code></pre>
+<pre><code>##      X.id.1          X.id.2        lagWithinX.id.1
+##  Min.   :  1.0   Min.   :      1   Min.   :0.000  
+##  1st Qu.:221.0   1st Qu.: 251860   1st Qu.:1.000  
+##  Median :460.0   Median : 503705   Median :1.000  
+##  Mean   :446.7   Mean   : 503715   Mean   :0.971  
+##  3rd Qu.:672.0   3rd Qu.: 755582   3rd Qu.:1.000  
+##  Max.   :895.0   Max.   :1007419   Max.   :1.000  
+##  NA&#39;s   :11155   NA&#39;s   :11155     NA&#39;s   :12050</code></pre>
+<pre class="r"><code>ggplot2::ggplot(f1_dt, aes(x = lagWithinX.id.1)) +
+  geom_histogram()</code></pre>
+<p><img src="tongaSmartMeterData_files/figure-html/testLag_f1-2.png" width="672" /></p>
+<blockquote>
+<p>Yep. So we need a way to set the first dateTime within each id and then increase it by 30 minutes each row.</p>
+</blockquote>
+</div>
+</div>
+<div id="setting-true-datetime" class="section level2">
+<h2><span class="header-section-number">2.6</span> Setting true dateTime</h2>
+<p>Based on our hunch…</p>
+<pre class="r"><code>f1_dt[, counter :=1]
+f1_dt[, cumsum := cumsum(counter), keyby = .(X.id.1)] # add up within X.id.1
+f1_dt[, dateTime := ba_StartDate] # constant
+f1_dt[, dateTime := dateTime + (cumsum * 30 * 60)] # add on the number of seconds since start
+
+f1_dt[, date := lubridate::date(dateTime)]
+f1_dt[, month := lubridate::month(dateTime,
+                                  label = TRUE, 
+                                  abbr = TRUE)
+      ]
+
+head(f1_dt[!is.na(X.id.1), .(X.id.1, X.id.2, ba_EndDate, ba_EndTime, 
+                             ba_StartDate, dateTime)])</code></pre>
+<pre><code>##    X.id.1 X.id.2          ba_EndDate          ba_EndTime        ba_StartDate
+## 1:      1      1 2020-01-27 21:25:00 2019-05-12 05:00:00 2018-11-30 11:00:00
+## 2:      1      2 2020-01-27 21:25:00 2019-05-12 05:00:00 2018-11-30 11:00:00
+## 3:      1      3 2020-01-27 21:25:00 2019-05-12 05:00:00 2018-11-30 11:00:00
+## 4:      1      4 2020-01-27 21:25:00 2019-05-12 05:00:00 2018-11-30 11:00:00
+## 5:      1      5 2020-01-27 21:25:00 2019-05-12 05:00:00 2018-11-30 11:00:00
+## 6:      1      6 2020-01-27 21:25:00 2019-05-12 05:00:00 2018-11-30 11:00:00
+##               dateTime
+## 1: 2018-11-30 11:30:00
+## 2: 2018-11-30 12:00:00
+## 3: 2018-11-30 12:30:00
+## 4: 2018-11-30 13:00:00
+## 5: 2018-11-30 13:30:00
+## 6: 2018-11-30 14:00:00</code></pre>
+<pre class="r"><code>summary(f1_dt[!is.na(X.id.1), .(X.id.1, X.id.2, ba_EndDate, ba_EndTime,
+                                ba_StartDate, dateTime)])</code></pre>
+<pre><code>##      X.id.1          X.id.2          ba_EndDate                 
+##  Min.   :  1.0   Min.   :      1   Min.   :2020-01-27 21:25:00  
+##  1st Qu.:221.0   1st Qu.: 251860   1st Qu.:2020-01-27 21:25:00  
+##  Median :460.0   Median : 503705   Median :2020-01-27 21:25:00  
+##  Mean   :446.7   Mean   : 503715   Mean   :2020-01-27 21:25:00  
+##  3rd Qu.:672.0   3rd Qu.: 755582   3rd Qu.:2020-01-27 21:25:00  
+##  Max.   :895.0   Max.   :1007419   Max.   :2020-01-27 21:25:00  
+##                                                                 
+##    ba_EndTime                   ba_StartDate                
+##  Min.   :2019-05-12 05:00:00   Min.   :2018-11-30 11:00:00  
+##  1st Qu.:2019-05-12 05:00:00   1st Qu.:2018-11-30 11:00:00  
+##  Median :2019-05-12 05:00:00   Median :2018-11-30 11:00:00  
+##  Mean   :2019-05-12 05:00:00   Mean   :2018-11-30 11:00:00  
+##  3rd Qu.:2019-05-12 05:00:00   3rd Qu.:2018-11-30 11:00:00  
+##  Max.   :2019-05-12 05:00:00   Max.   :2018-11-30 11:00:00  
+##  NA&#39;s   :1036567                                            
+##     dateTime                  
+##  Min.   :2018-11-30 11:30:00  
+##  1st Qu.:2018-12-06 19:00:00  
+##  Median :2018-12-13 05:30:00  
+##  Mean   :2018-12-16 18:50:09  
+##  3rd Qu.:2018-12-25 12:30:00  
+##  Max.   :2019-01-27 23:30:00  
+## </code></pre>
+<pre class="r"><code>skim(f1_dt[, .(X.id.1, X.id.2,ba_EndDate, ba_EndTime, ba_StartDate, dateTime)])</code></pre>
+<table style='width: auto;'
+        class='table table-condensed'>
+<caption>
+(#tab:f1_makeDateTime)Data summary
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Name
+</td>
+<td style="text-align:left;">
+…[]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of rows
+</td>
+<td style="text-align:left;">
+1048574
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of columns
+</td>
+<td style="text-align:left;">
+6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+_______________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Column type frequency:
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+numeric
+</td>
+<td style="text-align:left;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+POSIXct
+</td>
+<td style="text-align:left;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+________________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Group variables
+</td>
+<td style="text-align:left;">
+None
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: numeric</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+skim_variable
+</th>
+<th style="text-align:right;">
+n_missing
+</th>
+<th style="text-align:right;">
+complete_rate
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+p0
+</th>
+<th style="text-align:right;">
+p25
+</th>
+<th style="text-align:right;">
+p50
+</th>
+<th style="text-align:right;">
+p75
+</th>
+<th style="text-align:right;">
+p100
+</th>
+<th style="text-align:left;">
+hist
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+X.id.1
+</td>
+<td style="text-align:right;">
+11155
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:right;">
+446.71
+</td>
+<td style="text-align:right;">
+259.02
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+221.0
+</td>
+<td style="text-align:right;">
+460
+</td>
+<td style="text-align:right;">
+672.0
+</td>
+<td style="text-align:right;">
+895
+</td>
+<td style="text-align:left;">
+▇▆▇▆▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+X.id.2
+</td>
+<td style="text-align:right;">
+11155
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:right;">
+503715.04
+</td>
+<td style="text-align:right;">
+290824.01
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+251860.5
+</td>
+<td style="text-align:right;">
+503705
+</td>
+<td style="text-align:right;">
+755582.5
+</td>
+<td style="text-align:right;">
+1007419
+</td>
+<td style="text-align:left;">
+▇▇▇▇▇
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: POSIXct</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+skim_variable
+</th>
+<th style="text-align:right;">
+n_missing
+</th>
+<th style="text-align:right;">
+complete_rate
+</th>
+<th style="text-align:left;">
+min
+</th>
+<th style="text-align:left;">
+max
+</th>
+<th style="text-align:left;">
+median
+</th>
+<th style="text-align:right;">
+n_unique
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+ba_EndDate
+</td>
+<td style="text-align:right;">
+11155
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:left;">
+2020-01-27 21:25:00
+</td>
+<td style="text-align:left;">
+2020-01-27 21:25:00
+</td>
+<td style="text-align:left;">
+2020-01-27 21:25:00
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ba_EndTime
+</td>
+<td style="text-align:right;">
+1047722
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:left;">
+2019-05-12 05:00:00
+</td>
+<td style="text-align:left;">
+2019-05-12 05:00:00
+</td>
+<td style="text-align:left;">
+2019-05-12 05:00:00
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ba_StartDate
+</td>
+<td style="text-align:right;">
+11155
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:left;">
+2018-11-30 11:00:00
+</td>
+<td style="text-align:left;">
+2018-11-30 11:00:00
+</td>
+<td style="text-align:left;">
+2018-11-30 11:00:00
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+dateTime
+</td>
+<td style="text-align:right;">
+11155
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:left;">
+2018-11-30 11:30:00
+</td>
+<td style="text-align:left;">
+2019-01-27 23:30:00
+</td>
+<td style="text-align:left;">
+2018-12-13 05:30:00
+</td>
+<td style="text-align:right;">
+2809
+</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Looks OK: dateTime implies we have 2810 half hours represented which implies we only have 2 months of data.</p>
+</blockquote>
+<pre class="r"><code>f1_dt[, .(nObs = .N), keyby = .(month,
+                                year = lubridate::year(dateTime))][order(year)]</code></pre>
+<pre><code>##    month year   nObs
+## 1:   Nov 2018  21925
+## 2:   Dec 2018 849112
+## 3:   Jan 2019 166382
+## 4:  &lt;NA&gt;   NA  11155</code></pre>
+<blockquote>
+<p>Looks like it <em>but</em> this depends if we’ve coded dateTime correctly.</p>
+</blockquote>
+<p>Let’s see how many households (IDs) and observations we have over time.</p>
+<pre class="r"><code>plotDT &lt;- f1_dt[, .(nX.id = uniqueN(X.id)), keyby = .(date)]
+ggplot2::ggplot(plotDT, aes(y = nX.id, x = date)) +
+  geom_point()</code></pre>
+<div class="figure">
+<img src="tongaSmartMeterData_files/figure-html/plot_f1_NumberOfIXDsByDate-1.png" alt="Number of unique X.id by date" width="672" />
+<p class="caption">
+(#fig:plot_f1_NumberOfIXDsByDate)Number of unique X.id by date
+</p>
+</div>
+<pre class="r"><code>plotDT &lt;- f1_dt[, .(nX.id.1 = uniqueN(X.id.1)), keyby = .(date)]
+ggplot2::ggplot(plotDT, aes(y = nX.id.1, x = date)) +
+  geom_point()</code></pre>
+<div class="figure"><span id="fig:plotf1NumberOfX1IDsByDate"></span>
+<img src="tongaSmartMeterData_files/figure-html/plotf1NumberOfX1IDsByDate-1.png" alt="Number of unique X.id.1 by date" width="672" />
+<p class="caption">
+Figure 2.1: Number of unique X.id.1 by date
+</p>
+</div>
+<pre class="r"><code>plotDT &lt;- f1_dt[, .(nObs = .N), keyby = .(date)]
+ggplot2::ggplot(plotDT, aes(y = nObs, x = date)) +
+  geom_point()</code></pre>
+<div class="figure"><span id="fig:NumberOfObsByDateTime"></span>
+<img src="tongaSmartMeterData_files/figure-html/NumberOfObsByDateTime-1.png" alt="Number of obs by date" width="672" />
+<p class="caption">
+Figure 2.2: Number of obs by date
+</p>
+</div>
+<p>Yeah. So this does suggest that X.id.2 is a household ID as it follows the pattern of the number of observations (<a href="#fig:plotf1NumberOfX1IDsByDate">2.1</a>).</p>
+</div>
+<div id="numberofreadings" class="section level2">
+<h2><span class="header-section-number">2.7</span> NumberOfReadings</h2>
+<p>What is this for?</p>
+<pre class="r"><code>head(f1_dt$NumberOfReadings)</code></pre>
+<pre><code>## [1] NA NA NA NA NA NA</code></pre>
+<pre class="r"><code>ggplot2::ggplot(f1_dt[,.(NumberOfReadings)], aes(x = NumberOfReadings)) +
+  geom_histogram()</code></pre>
+<p><img src="tongaSmartMeterData_files/figure-html/plot_f1_NumberOfReadings-1.png" width="672" /></p>
+<p>OK, so why do we have some rows with lots of readings and some with far fewer? Is this just meta-data for each id - does it tell us how many readings we have for each ID?</p>
+</div>
+<div id="value" class="section level2">
+<h2><span class="header-section-number">2.8</span> Value</h2>
+<p>Value should (ideally) be consumption per half hour.</p>
+<pre class="r"><code>skim(f1_dt$Value)</code></pre>
+<table style='width: auto;'
+        class='table table-condensed'>
+<caption>
+<span id="tab:plotf1value">Table 2.2: </span>Data summary
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Name
+</td>
+<td style="text-align:left;">
+f1_dt$Value
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of rows
+</td>
+<td style="text-align:left;">
+1048574
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of columns
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+_______________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Column type frequency:
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+numeric
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+________________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Group variables
+</td>
+<td style="text-align:left;">
+None
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: numeric</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+skim_variable
+</th>
+<th style="text-align:right;">
+n_missing
+</th>
+<th style="text-align:right;">
+complete_rate
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+p0
+</th>
+<th style="text-align:right;">
+p25
+</th>
+<th style="text-align:right;">
+p50
+</th>
+<th style="text-align:right;">
+p75
+</th>
+<th style="text-align:right;">
+p100
+</th>
+<th style="text-align:left;">
+hist
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+data
+</td>
+<td style="text-align:right;">
+11155
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:right;">
+231.76
+</td>
+<td style="text-align:right;">
+32.14
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+234
+</td>
+<td style="text-align:right;">
+237
+</td>
+<td style="text-align:right;">
+240
+</td>
+<td style="text-align:right;">
+917
+</td>
+<td style="text-align:left;">
+▁▇▁▁▁
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>ggplot2::ggplot(f1_dt[,.(Value, NumberOfReadings)], aes(x = NumberOfReadings , y = Value)) +
+  geom_point()</code></pre>
+<div class="figure"><span id="fig:plotf1value1"></span>
+<img src="tongaSmartMeterData_files/figure-html/plotf1value-1.png" alt="Distribution of Value" width="672" />
+<p class="caption">
+Figure 2.3: Distribution of Value
+</p>
+</div>
+<pre class="r"><code>ggplot2::ggplot(f1_dt[,.(Value, NumberOfReadings)], aes(x = Value)) +
+  geom_histogram()</code></pre>
+<div class="figure"><span id="fig:plotf1value2"></span>
+<img src="tongaSmartMeterData_files/figure-html/plotf1value-2.png" alt="Distribution of Value" width="672" />
+<p class="caption">
+Figure 2.4: Distribution of Value
+</p>
+</div>
+<p>Well <a href="#fig:plotf1value"><strong>??</strong></a> looks a bit odd. Why is there a sort of threshold at 250? We obviously have very few Values over 250…</p>
+<p>Try plotting mean of Value by dateTime across all households (remember number of X.id.1s varies across time)</p>
+<pre class="r"><code>p &lt;- ggplot2::ggplot(f1_dt, aes(x = date , y = Value, group = date)) +
+  geom_boxplot()
+
+p</code></pre>
+<div class="figure">
+<img src="tongaSmartMeterData_files/figure-html/plot_f1_valueByDate-1.png" alt="Box plot of Value by date" width="672" />
+<p class="caption">
+(#fig:plot_f1_valueByDate)Box plot of Value by date
+</p>
+</div>
+<p>Christmas day looks interesting. But most of the values are below 250 on every other day.</p>
+<pre class="r"><code>plotDT &lt;- f1_dt[, .(meanValue = mean(Value)), keyby = .(dateTime)]
+  ggplot2::ggplot(plotDT, aes(x = dateTime , y = meanValue)) +
+  geom_point()</code></pre>
+<div class="figure">
+<img src="tongaSmartMeterData_files/figure-html/plot_f1_valueMeanByDate-1.png" alt="Mean Value by date" width="672" />
+<p class="caption">
+(#fig:plot_f1_valueMeanByDate)Mean Value by date
+</p>
+</div>
+<pre class="r"><code>f1_dt[, hms := hms::as_hms(dateTime)]
+f1_dt[, month := lubridate::month(dateTime, label = TRUE, abbr = TRUE)]
+
+ggplot2::ggplot(f1_dt[!is.na(month)], aes(x = hms , y = Value, group = hms)) +
+  geom_boxplot() +
+  facet_grid(. ~ month)</code></pre>
+<div class="figure">
+<img src="tongaSmartMeterData_files/figure-html/plot_f1_valueByTime-1.png" alt="Value by time of day" width="672" />
+<p class="caption">
+(#fig:plot_f1_valueByTime)Value by time of day
+</p>
+</div>
+<pre class="r"><code>plotDT &lt;- f1_dt[!is.na(month), .(meanValue = mean(Value)), keyby = .(month, hms)]
+  
+ggplot2::ggplot(plotDT, aes(x = hms , y = meanValue)) +
+  geom_point() +
+  facet_grid(. ~ month)</code></pre>
+<div class="figure"><span id="fig:plotf1meanValueByTime"></span>
+<img src="tongaSmartMeterData_files/figure-html/plotf1meanValueByTime-1.png" alt="Mean Value by time of day" width="672" />
+<p class="caption">
+Figure 2.5: Mean Value by time of day
+</p>
+</div>
+<p>What is this? Is this even the right shape?? <a href="#fig:plotf1meanValueByTime">2.5</a> Could be… but the values are weird.</p>
+<blockquote>
+<p>It can’t be voltage can it (with outliers)?</p>
+</blockquote>
+</div>
+<div id="initial-dataset-summary" class="section level2">
+<h2><span class="header-section-number">2.9</span> Initial dataset summary</h2>
+<p>We really don’t know what most of these data columns are!</p>
+</div>
+</div>
+<div id="second-dataset" class="section level1">
+<h1><span class="header-section-number">3</span> Second dataset</h1>
+<p>Let’s hope this is more heplful!!</p>
+</div>
+<div id="runtime" class="section level1">
+<h1><span class="header-section-number">4</span> Runtime</h1>
+<p>Analysis completed in 147.9 seconds ( 2.47 minutes) using <a href="https://cran.r-project.org/package=knitr">knitr</a> in <a href="http://www.rstudio.com">RStudio</a> with R version 3.6.3 (2020-02-29) running on x86_64-apple-darwin15.6.0.</p>
+</div>
+<div id="r-environment" class="section level1">
+<h1><span class="header-section-number">5</span> R environment</h1>
+<div id="r-packages-used" class="section level2">
+<h2><span class="header-section-number">5.1</span> R packages used</h2>
+<ul>
+<li>base R <span class="citation">(R Core Team 2016)</span></li>
+<li>bookdown <span class="citation">(Xie 2016a)</span></li>
+<li>data.table <span class="citation">(Dowle et al. 2015)</span></li>
+<li>ggplot2 <span class="citation">(Wickham 2009)</span></li>
+<li>kableExtra <span class="citation">(Zhu 2018)</span></li>
+<li>knitr <span class="citation">(Xie 2016b)</span></li>
+<li>lubridate <span class="citation">(Grolemund and Wickham 2011)</span></li>
+<li>rmarkdown <span class="citation">(Allaire et al. 2018)</span></li>
+<li>skimr <span class="citation">(Arino de la Rubia et al. 2017)</span></li>
+<li>XML <span class="citation">(Lang and CRAN Team 2019)</span></li>
+</ul>
+</div>
+<div id="session-info" class="section level2">
+<h2><span class="header-section-number">5.2</span> Session info</h2>
+<pre><code>## R version 3.6.3 (2020-02-29)
+## Platform: x86_64-apple-darwin15.6.0 (64-bit)
+## Running under: macOS Catalina 10.15.3
+## 
+## Matrix products: default
+## BLAS:   /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRblas.0.dylib
+## LAPACK: /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRlapack.dylib
+## 
+## locale:
+## [1] en_NZ.UTF-8/en_NZ.UTF-8/en_NZ.UTF-8/C/en_NZ.UTF-8/en_NZ.UTF-8
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+## [1] XML_3.99-0.3      skimr_2.1         kableExtra_1.1.0  ggplot2_3.3.0    
+## [5] hms_0.5.3         lubridate_1.7.4   data.table_1.12.8
+## 
+## loaded via a namespace (and not attached):
+##  [1] tidyselect_1.0.0  xfun_0.12         repr_1.1.0        purrr_0.3.3      
+##  [5] colorspace_1.4-1  vctrs_0.2.3       htmltools_0.4.0   viridisLite_0.3.0
+##  [9] yaml_2.2.1        base64enc_0.1-3   utf8_1.1.4        rlang_0.4.5      
+## [13] R.oo_1.23.0       pillar_1.4.3      glue_1.3.1        withr_2.1.2      
+## [17] R.utils_2.9.2     lifecycle_0.2.0   stringr_1.4.0     munsell_0.5.0    
+## [21] gtable_0.3.0      rvest_0.3.5       R.methodsS3_1.8.0 evaluate_0.14    
+## [25] labeling_0.3      knitr_1.28        fansi_0.4.1       highr_0.8        
+## [29] Rcpp_1.0.3        readr_1.3.1       scales_1.1.0      webshot_0.5.2    
+## [33] jsonlite_1.6.1    farver_2.0.3      digest_0.6.25     stringi_1.4.6    
+## [37] bookdown_0.18     dplyr_0.8.5       grid_3.6.3        cli_2.0.2        
+## [41] tools_3.6.3       magrittr_1.5      tibble_2.1.3      crayon_1.3.4     
+## [45] tidyr_1.0.2       pkgconfig_2.0.3   xml2_1.2.2        assertthat_0.2.1 
+## [49] rmarkdown_2.1     httr_1.4.1        rstudioapi_0.11   R6_2.4.1         
+## [53] compiler_3.6.3</code></pre>
+</div>
+</div>
+<div id="references" class="section level1 unnumbered">
+<h1>References</h1>
+<div id="refs" class="references">
+<div id="ref-rmarkdown">
+<p>Allaire, JJ, Yihui Xie, Jonathan McPherson, Javier Luraschi, Kevin Ushey, Aron Atkins, Hadley Wickham, Joe Cheng, and Winston Chang. 2018. <em>Rmarkdown: Dynamic Documents for R</em>. <a href="https://CRAN.R-project.org/package=rmarkdown">https://CRAN.R-project.org/package=rmarkdown</a>.</p>
+</div>
+<div id="ref-skimr">
+<p>Arino de la Rubia, Eduardo, Hao Zhu, Shannon Ellis, Elin Waring, and Michael Quinn. 2017. <em>Skimr: Skimr</em>. <a href="https://github.com/ropenscilabs/skimr">https://github.com/ropenscilabs/skimr</a>.</p>
+</div>
+<div id="ref-data.table">
+<p>Dowle, M, A Srinivasan, T Short, S Lianoglou with contributions from R Saporta, and E Antonyan. 2015. <em>Data.table: Extension of Data.frame</em>. <a href="https://CRAN.R-project.org/package=data.table">https://CRAN.R-project.org/package=data.table</a>.</p>
+</div>
+<div id="ref-lubridate">
+<p>Grolemund, Garrett, and Hadley Wickham. 2011. “Dates and Times Made Easy with lubridate.” <em>Journal of Statistical Software</em> 40 (3): 1–25. <a href="http://www.jstatsoft.org/v40/i03/">http://www.jstatsoft.org/v40/i03/</a>.</p>
+</div>
+<div id="ref-XML">
+<p>Lang, Duncan Temple, and the CRAN Team. 2019. <em>XML: Tools for Parsing and Generating Xml Within R and S-Plus</em>. <a href="https://CRAN.R-project.org/package=XML">https://CRAN.R-project.org/package=XML</a>.</p>
+</div>
+<div id="ref-baseR">
+<p>R Core Team. 2016. <em>R: A Language and Environment for Statistical Computing</em>. Vienna, Austria: R Foundation for Statistical Computing. <a href="https://www.R-project.org/">https://www.R-project.org/</a>.</p>
+</div>
+<div id="ref-ggplot2">
+<p>Wickham, Hadley. 2009. <em>Ggplot2: Elegant Graphics for Data Analysis</em>. Springer-Verlag New York. <a href="http://ggplot2.org">http://ggplot2.org</a>.</p>
+</div>
+<div id="ref-bookdown">
+<p>Xie, Yihui. 2016a. <em>Bookdown: Authoring Books and Technical Documents with R Markdown</em>. Boca Raton, Florida: Chapman; Hall/CRC. <a href="https://github.com/rstudio/bookdown">https://github.com/rstudio/bookdown</a>.</p>
+</div>
+<div id="ref-knitr">
+<p>———. 2016b. <em>Knitr: A General-Purpose Package for Dynamic Report Generation in R</em>. <a href="https://CRAN.R-project.org/package=knitr">https://CRAN.R-project.org/package=knitr</a>.</p>
+</div>
+<div id="ref-kableExtra">
+<p>Zhu, Hao. 2018. <em>KableExtra: Construct Complex Table with ’Kable’ and Pipe Syntax</em>. <a href="https://CRAN.R-project.org/package=kableExtra">https://CRAN.R-project.org/package=kableExtra</a>.</p>
+</div>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
