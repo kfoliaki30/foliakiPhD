@@ -1,5 +1,5 @@
 # foliakiPhD
-Repo supprting a PhD project
+Repo supporting a PhD project
 
  * smart meter data
    * v1 dataset [test](tongaSmartMeterData.html)
