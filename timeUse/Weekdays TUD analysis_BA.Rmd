@@ -1,0 +1,476 @@
+---
+title: "TUD FOR WEEKDAYS"
+author: "Kakau with minor amendments from Ben :-)"
+date: 'Last run at: `r Sys.time()`'
+output:
+  bookdown::html_document2:
+    fig_caption: yes
+    code_folding: hide
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+    toc_float: TRUE
+---
+
+```{r setup}
+# packages ----
+library(plyr)
+library(stringr)
+library(tidyverse)
+library(tidyr)
+library(lubridate)
+library(kableExtra)
+library(dplyr)
+library(scales)
+library(ggplot2)
+
+# parameters ----
+dPath <- "/Volumes/hum-csafe/Research Projects/FoliakiPhD/tudData/" # edit for your set up
+dataF <- path.expand(paste0(dPath, "TUD Weekdays.csv"))
+  
+```
+
+#Time Use Diary
+
+
+Importing Weekends dataframe
+
+The dataframe is a wide format. I had to clean the data by correcting typo and translating some of the data into english. So the file is not as original as it is when export from qualtrics. 
+
+```{r loadData}
+
+# read in my dataframe
+weekdays <- read.csv(dataF, na.strings=c(""), check.names = FALSE, header = TRUE, as.is=TRUE)
+
+head(weekdays)
+
+
+
+```
+
+
+Converting the wide dataframe to long dataframe for easier analysis
+
+Ive noticed that the time is in a character format rather than date. i need to change it to date
+
+> see below
+
+```{r makeLong}
+
+longweekdays <- weekdays %>%
+  gather(Time, Activity, 4:51)
+
+head(longweekdays)
+
+```
+
+
+Sorting the TUD dataframe, Firstly, as you can see previously some respondents do not have a secondary activity (i.e NA). Secondly, the data is sorted by time. I think it would be easier to sorted by Household ID. So here i am sorting the data based on ID number
+
+```{r sortByID}
+# sorting my dataframe in accending order based on the Household ID
+weekdayOrder <- order(longweekdays$`Household ID`)
+head(weekdayOrder)
+
+# Applying the sorting order into my "longweekdends" dataframe and call it sortweekends
+sortweekdays <- longweekdays[weekdayOrder,]
+head(sortweekdays)
+
+names(sortweekdays)
+```
+
+
+Here i am seprating the activity columm into a primary activity and a secondary activity
+
+The issue im facing with is the date. It in character and alsoit picked up the current date (2020) rather than the date from the TUD.
+
+> BA: I can't see a date variable. How would R know which date the diary was completed on?
+
+Im trying to sort the date but it comes back N/A
+
+> see below
+
+```{r rearrangeActs}
+# Since both the first and second activiies are in one column, i need to separate them into two columns
+
+#call the number of row in my dataframe for the maximum row for my sequence function
+nrow(sortweekdays)
+
+#create a new dataframe "newdata" for the primary activity only (all odd rows)
+newdata <- sortweekdays[seq(1,8351,2),]
+head(newdata)
+
+#create a new datagame "newdata1" for the secondary activity (oall even rows)
+newdata1 <- sortweekdays[seq(2,8352,2),]
+head(newdata1)
+
+#since i have separated my two acitvities, i need to merge them into one dataframe
+newdata$Activity2 <- newdata1$Activity
+
+kableExtra::kable(head(newdata), caption = "Test merged long form data") %>%
+  kable_styling()
+
+
+```
+
+> BA: fix the time variable so it looks like and acts like HH:MM
+
+```{r fixTime}
+newdata$rawTime <- hms::parse_hm(newdata$Time) # this will only be right for AM
+newdata$AM_PM <- stringr::word(newdata$Time, 2) 
+
+
+  
+newdata$fixedTime <- ifelse(newdata$AM_PM =="PM",
+                            newdata$rawTime + (12 * 60 * 60), # if PM add 12 hours
+                            newdata$rawTime # otherwise don't
+                            ) 
+newdata$fixedHMS <- hms::as_hms(newdata$fixedTime)
+
+t <- table(newdata$Time, newdata$AM_PM)
+kableExtra::kable(t, caption = "Test time coding") %>%
+  kable_styling()
+```
+
+# Weekdays TUD
+
+Here i am trying to seprate the data into days so i can analyse the activities.
+
+```{r createWeekdayDataFrames}
+
+#filter newdata dataframe by date using the dplyr
+
+#creating a new dataframe "Monday"
+monday <- dplyr::filter(newdata, Day == "Monday")
+head(monday)
+
+#creating a new dataframe "Tuesday"
+tuesday <- dplyr::filter(newdata, Day == "Tuesday")
+head(tuesday)
+
+#creating a new dataframe "Wednesday"
+wednesday <- dplyr::filter(newdata, Day == "Wednesday")
+head(wednesday)
+
+#creating a new dataframe "Thursday"
+thursday <- dplyr::filter(newdata, Day == "Thursday")
+head(thursday)
+
+#creating a new dataframe "Friday"
+friday <- dplyr::filter(newdata, Day == "Friday")
+head(friday)
+
+
+```
+
+
+# Monday
+
+So im trying to sort out the coding for Monday so i can copy it for the rest of the weekdays. I've did a frequency and proportion of activities for Monday.
+
+```{r testMonday}
+
+
+
+#frequency of Activities
+freqA <- table(monday$Activity, exclude=NULL)
+freqA
+dim(freqA)
+
+#proportion of Activities
+propA <- prop.table(freqA)*100
+propA <- round(propA, digits=2)
+propA
+
+dim(propA)
+
+#creating table with binding
+tableMon <- cbind(freqA, propA)
+tableMon <- cbind(Gender = rownames(tableMon), tableMon)
+rownames(tableMon) <- NULL
+tableMon
+
+#rename column names
+colnames(tableMon)[colnames(tableMon) == "freqA"] <- "Frequency"
+colnames(tableMon)[colnames(tableMon) == "propA"] <- "Proportion (%)"
+tableMon
+
+#using kable extra to create better table format
+tableMonday <- kable(tableMon)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
+
+tableMonday
+
+```
+
+
+#Monday TUD
+Im trying to see the count for all the activities in the TUD
+
+```{r mondayGroupActs}
+groupbymonAct <- monday %>%
+  dplyr::group_by(Activity) %>%
+  dplyr::summarize(count = n())
+groupbymonAct
+
+```
+
+Im am trying to remove sleeping, rest, going to work from the data so that i can only focus on the rest of the acitivities.
+
+The issue i am facing as the time is not sorted in accending order. Can you help with the coding
+
+> yep - see what I did :-)
+
+```{r mondayFilter}
+tableAll <- monday %>%
+  #select(Time, Activity) %>% 
+  select(fixedHMS, Activity) %>% # use the new time variable
+  filter(Activity != "Sleeping") %>%
+  filter(Activity != "Rest") %>%
+  filter(Activity != "Work") %>%
+  #group_by(Time) %>% 
+  group_by(fixedHMS) %>% 
+  tally
+
+kableExtra::kable(tableAll, caption = "Monday test (no sleep/rest/work)") %>%
+  kable_styling()
+
+# plot
+ggplot2::ggplot(tableAll, aes(x = fixedHMS, y = n)) +
+  geom_col()
+```
+
+#Monday Cooking
+
+Here im am trying to look at anything related to preparing and eating a meal. 
+
+```{r mondayCook}
+# creating dataframe for all cooking
+
+tableCooking <- monday %>%
+  select(fixedHMS, Activity) %>% 
+  filter(Activity != "Sleeping") %>%
+  filter(Activity != "Rest") %>%
+  filter(Activity != "Work") %>%
+  filter(Activity %in% c("Cooking", "Breakfast", "Dinner", "Light meal")) %>% 
+  group_by(fixedHMS) %>% 
+  tally
+  
+  
+tableCooking
+
+b <- ggplot(tableCooking, aes(x = fixedHMS, y = n)) + geom_bar(stat = "identity", position = "stack", color="blue", fill="blue") +
+  ggtitle("(b) Cooking") +
+  xlab("Time ") +
+  ylab("n") + theme(plot.title = element_text(color="Black", size=11, face="bold.italic", hjust=0.5,lineheight=0.8),
+        axis.title.x = element_text(color="black", size=10, face="bold"),
+        axis.title.y = element_text(color="black", size=10, face="bold"),
+        panel.background=element_rect(fill = "white"),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(), 
+        axis.line = element_line(colour = "black", size = 1) + 
+        scale_x_date(labels = date_format("%I:%M %p"))
+)
+
+b
+
+```
+
+#Monday Tidy up
+
+similar to the above but for tidy up/cleaning up
+```{r mondayTidyUp}
+# creating dataframe for all cleaning up
+
+tableTidyup <- monday %>%
+  select(fixedHMS, Activity) %>% 
+  filter(Activity != "Sleeping") %>% 
+  filter(Activity != "Rest") %>%
+  filter(Activity != "Work") %>%
+  filter(Activity %in% c("Tidy up", "Laundry", "Showering", "Getting dressed", "Ironing", "Feeding animals", "Turning off appliances/Lights")) %>% 
+  group_by(fixedHMS) %>% 
+  tally
+  
+  
+tableTidyup
+
+c <- ggplot(tableTidyup, aes(x = fixedHMS, y = n)) + geom_bar(stat = "identity", position = "stack", color="red", fill="red") +
+  ggtitle("(c) Tidy up") +
+  xlab("Time ") +
+  ylab("n") + theme(plot.title = element_text(color="Black", size=11, face="bold.italic", hjust=0.5,lineheight=0.8),
+        axis.title.x = element_text(color="black", size=10, face="bold"),
+        axis.title.y = element_text(color="black", size=10, face="bold"),
+        panel.background=element_rect(fill = "white"),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(), 
+        axis.line = element_line(colour = "black", size = 1) + 
+        scale_x_date(labels = date_format("%I:%M %p"))
+)
+
+c
+
+```
+
+
+# Monday Leisure
+  similar to the above but for leisure
+```{r momdayLeisure}
+# creating dataframe for all leisure
+
+tableleisure <- monday %>%
+  select(fixedHMS, Activity) %>% 
+  filter(Activity != "Sleeping") %>% 
+  filter(Activity != "Rest") %>% 
+  filter(Activity != "Work") %>%
+  filter(Activity %in% c("TV", "Homework", "Laptop/PC", "Radio", "Mobile phones", "Reading", "Family time")) %>% 
+  group_by(fixedHMS) %>% 
+  tally
+  
+  
+tableleisure
+
+d <- ggplot(tableleisure, aes(x = fixedHMS, y = n)) + geom_bar(stat = "identity", position = "stack", color="violet", fill="violet") +
+  ggtitle("(d) Leisure") +
+  xlab("Time ") +
+  ylab("n") + theme(plot.title = element_text(color="Black", size=11, face="bold.italic", hjust=0.5,lineheight=0.8),
+        axis.title.x = element_text(color="black", size=10, face="bold"),
+        axis.title.y = element_text(color="black", size=10, face="bold"),
+        panel.background=element_rect(fill = "white"),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(), 
+        axis.line = element_line(colour = "black", size = 1) + 
+        scale_x_date(labels = date_format("%I:%M %p"))
+)
+
+d
+```
+
+# Monday Away
+similar to the above but for away from home
+```{r mondayAway}
+# creating dataframe for Away from Home
+
+tableAway <- monday %>%
+  select(fixedHMS, Activity) %>% 
+  filter(Activity != "Sleeping") %>% 
+  filter(Activity != "Rest") %>% 
+  filter(Activity %in% c("Farm", "Relatives", "Work", "Fitness", "Kava", "Church", "Sports", "Going out"))%>% 
+  group_by(fixedHMS) %>% 
+  tally
+  
+  
+tableAway
+
+e <- ggplot(tableAway, aes(x = fixedHMS, y = n)) + geom_bar(stat = "identity", position = "stack", color="orange", fill="orange") +
+  ggtitle("(e) Away") +
+  xlab("Time ") +
+  ylab("n") + theme(plot.title = element_text(color="Black", size=11, face="bold.italic", hjust=0.5,lineheight=0.8),
+        axis.title.x = element_text(color="black", size=10, face="bold"),
+        axis.title.y = element_text(color="black", size=10, face="bold"),
+        panel.background=element_rect(fill = "white"),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(), 
+        axis.line = element_line(colour = "black", size = 1) + 
+        scale_x_date(labels = date_format("%I:%M %p"))
+)
+
+e
+```
+
+#Monday Transport
+similar to the above but for transportation
+
+> BA: table breaks for some reason?
+
+```{r mondayTransport}
+# creating dataframe for transportation
+
+tableTransport <- monday %>%
+  select(fixedHMS, Activity) %>% 
+  filter(Activity != "Sleeping") %>%
+  filter(Activity != "Rest") %>%
+  filter(Activity != "Work") %>%
+  filter(Activity %in% c("Public transport", "Driving", "Walking")) %>% 
+  group_by(fixedHMS) %>% 
+  tally
+  
+  
+tableTransport
+
+#ploting Bar graph
+
+f <- ggplot(tableTransport, aes(x = fixedHMS, y = n)) + geom_bar(stat = "identity", position = "stack", color="purple", fill="purple") +
+  ggtitle("(e) Travelling") +
+  xlab("Time ") +
+  ylab("n") + theme(plot.title = element_text(color="Black", size=11, face="bold.italic", hjust=0.5,lineheight=0.8),
+        axis.title.x = element_text(color="black", size=10, face="bold"),
+        axis.title.y = element_text(color="black", size=10, face="bold"),
+        panel.background=element_rect(fill = "white"),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(), 
+        axis.line = element_line(colour = "black", size = 1) + 
+        scale_x_date(labels = date_format("%I:%M %p"))
+)
+
+f
+
+```
+
+# Multiple plots
+
+I wanted to put all the graphs in one page
+
+```{r gridTheGraphs}
+#graphs in one page
+
+library(grid)
+library(gridExtra)
+library(gridBase)
+
+
+```
+
+> BA: I would do this a different way by re-coding and putting all the plots in one plot:
+
+```{r onePlot}
+# I would use data.table for this, not because it is the best way but because I know how to use it!
+library(data.table)
+mondayDT <- data.table::as.data.table(monday)
+mondayDT[, ba_act := ifelse(Activity %in% c("Cooking", "Breakfast", "Dinner", "Light meal"), 
+                            "Cooking", # <- new code
+                            NA)
+         ]
+
+mondayDT[, ba_act := ifelse(Activity %in% c("Tidy up", "Laundry", "Showering", "Getting dressed", "Ironing", "Feeding animals", "Turning off appliances/Lights"),
+                            "Tidy up", 
+                            ba_act)
+         ]
+
+mondayDT[, ba_act := ifelse(Activity %in% c("TV", "Homework", "Laptop/PC", "Radio", "Mobile phones", "Reading", "Family time"), 
+                            "Leisure", 
+                            ba_act)
+         ]
+
+mondayDT[, ba_act := ifelse(Activity %in% c("Farm", "Relatives", "Work", "Fitness", "Kava", "Church", "Sports", "Going out"), 
+                            "Away", 
+                            ba_act)
+         ]
+
+mondayDT[, ba_act := ifelse(Activity %in% c("Public transport", "Driving", "Walking"), 
+                            "Transport", 
+                            ba_act)
+         ]
+
+t <- table(mondayDT$Activity, mondayDT$ba_act, useNA = "always")
+
+kableExtra::kable(t, caption = "Test activity coding") %>%
+  kable_styling()
+
+# make a summary table for the plot
+plotDT <- mondayDT[!is.na(ba_act), # excludes all NAs - see table to check coding 
+                   .(count = .N), keyby = .(fixedHMS, ba_act)]
+
+ggplot2::ggplot(plotDT, aes(x = fixedHMS, y = count, fill = ba_act)) +
+  geom_col() +
+  scale_fill_discrete(name="Activity (filtered)")
+```
