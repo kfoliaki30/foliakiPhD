@@ -203,7 +203,7 @@ tableMonday
 ```
 
 
-#Monday TUD
+## Monday TUD
 Im trying to see the count for all the activities in the TUD
 
 ```{r mondayGroupActs}
@@ -239,7 +239,7 @@ ggplot2::ggplot(tableAll, aes(x = fixedHMS, y = n)) +
   geom_col()
 ```
 
-#Monday Cooking
+## Monday Cooking
 
 Here im am trying to look at anything related to preparing and eating a meal. 
 
@@ -275,7 +275,7 @@ b
 
 ```
 
-#Monday Tidy up
+## Monday Tidy up
 
 similar to the above but for tidy up/cleaning up
 ```{r mondayTidyUp}
@@ -311,7 +311,7 @@ c
 ```
 
 
-# Monday Leisure
+## Monday Leisure
   similar to the above but for leisure
 ```{r momdayLeisure}
 # creating dataframe for all leisure
@@ -344,7 +344,7 @@ d <- ggplot(tableleisure, aes(x = fixedHMS, y = n)) + geom_bar(stat = "identity"
 d
 ```
 
-# Monday Away
+## Monday Away
 similar to the above but for away from home
 ```{r mondayAway}
 # creating dataframe for Away from Home
@@ -376,7 +376,7 @@ e <- ggplot(tableAway, aes(x = fixedHMS, y = n)) + geom_bar(stat = "identity", p
 e
 ```
 
-#Monday Transport
+## Monday Transport
 similar to the above but for transportation
 
 > BA: table breaks for some reason?
@@ -415,7 +415,7 @@ f
 
 ```
 
-# Multiple plots
+## Monday Multiple plots
 
 I wanted to put all the graphs in one page
 
@@ -471,5 +471,53 @@ plotDT <- mondayDT[!is.na(ba_act), # excludes all NAs - see table to check codin
 
 ggplot2::ggplot(plotDT, aes(x = fixedHMS, y = count, fill = ba_act)) +
   geom_col() +
+  scale_fill_discrete(name="Activity (filtered)")
+```
+
+# All weekdays plotted using facets
+
+Figure \@ref(fig:allWeekdays) shows counts for all days. We can see a few days are unkown. Also we have higher counts on Mondays. A lot of people are 'out' late at night?
+
+```{r allWeekdays, fig.cap="All days"}
+# use the all days table and the same coding method but across all days
+
+allDaysDT <- data.table::as.data.table(newdata)
+allDaysDT[, ba_act := ifelse(Activity %in% c("Cooking", "Breakfast", "Dinner", "Light meal"), 
+                            "Cooking", # <- new code
+                            NA)
+         ]
+
+allDaysDT[, ba_act := ifelse(Activity %in% c("Tidy up", "Laundry", "Showering", "Getting dressed", "Ironing", "Feeding animals", "Turning off appliances/Lights"),
+                            "Tidy up", 
+                            ba_act)
+         ]
+
+allDaysDT[, ba_act := ifelse(Activity %in% c("TV", "Homework", "Laptop/PC", "Radio", "Mobile phones", "Reading", "Family time"), 
+                            "Leisure", 
+                            ba_act)
+         ]
+
+allDaysDT[, ba_act := ifelse(Activity %in% c("Farm", "Relatives", "Work", "Fitness", "Kava", "Church", "Sports", "Going out"), 
+                            "Away", 
+                            ba_act)
+         ]
+
+allDaysDT[, ba_act := ifelse(Activity %in% c("Public transport", "Driving", "Walking"), 
+                            "Transport", 
+                            ba_act)
+         ]
+
+# t <- table(allDaysDT$Activity, allDaysDT$ba_act, useNA = "always")
+# 
+# kableExtra::kable(t, caption = "Test activity coding (all days)") %>%
+#   kable_styling()
+
+# make a summary table for the plot
+plotDT <- allDaysDT[!is.na(ba_act), # excludes all NAs - see table to check coding 
+                   .(count = .N), keyby = .(fixedHMS, ba_act, Day)]
+
+ggplot2::ggplot(plotDT, aes(x = fixedHMS, y = count, fill = ba_act)) +
+  geom_col() +
+  facet_grid(Day ~ .) +
   scale_fill_discrete(name="Activity (filtered)")
 ```
