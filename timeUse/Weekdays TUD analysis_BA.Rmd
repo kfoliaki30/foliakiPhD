@@ -117,15 +117,14 @@ kableExtra::kable(head(newdata), caption = "Test merged long form data") %>%
 
 ```{r fixTime}
 newdata$rawTime <- hms::parse_hm(newdata$Time) # this will only be right for AM
-newdata$AM_PM <- stringr::word(newdata$Time, 2) 
+newdata$AM_PM <- stringr::word(newdata$Time, 2) # get the second word of 'Time' which will be AM or PM
 
-
-  
-newdata$fixedTime <- ifelse(newdata$AM_PM =="PM",
-                            newdata$rawTime + (12 * 60 * 60), # if PM add 12 hours
+# Now use that to add 12 hours to rawTime whenit is actually PM
+newdata$fixedTime <- ifelse(newdata$AM_PM =="PM", # if PM
+                            newdata$rawTime + (12 * 60 * 60), #  add 12 hours
                             newdata$rawTime # otherwise don't
                             ) 
-newdata$fixedHMS <- hms::as_hms(newdata$fixedTime)
+newdata$fixedHMS <- hms::as_hms(newdata$fixedTime) # make sure it is in H:M:S format
 
 t <- table(newdata$Time, newdata$AM_PM)
 kableExtra::kable(t, caption = "Test time coding") %>%
